@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scientific Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+  :root {
+    --bg-color: #fffcf9;
+    --main-color: #ff577f; /* punchy pink */
+    --accent-color: #ffbe0b; /* bright yellow */
+    --btn-color: #ff6f91;
+    --btn-hover-color: #ff9aa2;
+    --text-color: #3a1c71;
+    --history-bg: #ffdee9;
+    --shadow-color: #f9c6d3;
+
+    --sci-btn-bg: #6a8cff;
+    --sci-btn-hover: #91a9ff;
+    --sci-btn-text: white;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: var(--bg-color);
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    user-select: none;
+  }
+
+  .calculator {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    max-width: 460px;
+    width: 100%;
+    padding: 20px 24px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .display {
+    background: var(--main-color);
+    color: white;
+    border-radius: 16px;
+    padding: 20px 24px;
+    font-size: 2.6rem;
+    font-weight: 700;
+    text-align: right;
+    letter-spacing: 0.08em;
+    box-shadow: inset 0 4px 14px rgba(255,87,127,0.7);
+    min-height: 70px;
+    word-wrap: break-word;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+  }
+
+  button {
+    background: var(--btn-color);
+    border: none;
+    border-radius: 16px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    padding: 14px 0;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: transform 0.15s ease, background-color 0.3s ease;
+    user-select: none;
+  }
+
+  button:active {
+    transform: scale(0.9);
+    background-color: var(--btn-hover-color);
+  }
+
+  button.operator {
+    background: var(--accent-color);
+    color: var(--text-color);
+    box-shadow: 0 4px 15px #f3d86a;
+  }
+
+  button.operator:active {
+    background-color: #fff08a;
+  }
+
+  button.equal {
+    grid-column: span 2;
+    background: var(--main-color);
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(255,87,127,0.8);
+  }
+
+  button.equal:active {
+    background-color: #ff305e;
+  }
+
+  /* Scientific buttons style */
+  button.sci {
+    background: var(--sci-btn-bg);
+    color: var(--sci-btn-text);
+    box-shadow: 0 4px 15px rgba(106,140,255,0.8);
+  }
+
+  button.sci:active {
+    background-color: var(--sci-btn-hover);
+  }
+
+  .history {
+    background: var(--history-bg);
+    border-radius: 16px;
+    padding: 12px 18px;
+    max-height: 180px;
+    overflow-y: auto;
+    box-shadow: inset 0 6px 12px rgba(255, 187, 176, 0.6);
+  }
+
+  .history h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--main-color);
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .history-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  .history-list li {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 6px;
+    border-radius: 12px;
+    background: white;
+    padding: 6px 12px;
+    box-shadow: 0 3px 8px var(--shadow-color);
+    word-wrap: break-word;
+  }
+
+  .clear-history-btn {
+    background: transparent;
+    color: var(--main-color);
+    border: 2px solid var(--main-color);
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 6px 12px;
+    margin-top: 10px;
+    align-self: flex-end;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .clear-history-btn:hover {
+    background-color: var(--main-color);
+    color: white;
+  }
+
+  /* Corner name styling */
+  .corner-name {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: red;
+    font-size: 1.5rem;
+    user-select: none;
+    opacity: 0.75;
+    pointer-events: none;
+    z-index: 1000;
+  }
+</style>
+</head>
+<body>
+  <div class="calculator" aria-label="Cute punchy color scientific calculator">
+    <div id="display" class="display" aria-live="polite" role="textbox" aria-label="Calculator display">0</div>
+    <div class="buttons" role="group" aria-label="Calculator buttons">
+      <!-- Row 1: Scientific functions -->
+      <button class="btn sci" data-value="sin(" aria-label="Sine">sin</button>
+      <button class="btn sci" data-value="cos(" aria-label="Cosine">cos</button>
+      <button class="btn sci" data-value="tan(" aria-label="Tangent">tan</button>
+      <button class="btn sci" data-value="sqrt(" aria-label="Square root">√</button>
+      <button class="btn sci" data-value="log(" aria-label="Log base 10">log</button>
+      <button class="btn sci" data-value="exp(" aria-label="Exponential">exp</button>
+      <button class="btn operator" data-value="C" aria-label="Clear">C</button>
+
+      <!-- Row 2: Numbers 7-9, Divide, pi, e, power -->
+      <button class="btn" data-value="7" aria-label="7">7</button>
+      <button class="btn" data-value="8" aria-label="8">8</button>
+      <button class="btn" data-value="9" aria-label="9">9</button>
+      <button class="btn operator" data-value="/" aria-label="Divide">÷</button>
+      <button class="btn sci" data-value="pi" aria-label="Pi constant">π</button>
+      <button class="btn sci" data-value="e" aria-label="Euler's number">e</button>
+      <button class="btn sci" data-value="^" aria-label="Power">^</button>
+
+      <!-- Row 3: Numbers 4-6, Multiply, Left paren, Right paren, Subtract -->
+      <button class="btn" data-value="4" aria-label="4">4</button>
+      <button class="btn" data-value="5" aria-label="5">5</button>
+      <button class="btn" data-value="6" aria-label="6">6</button>
+      <button class="btn operator" data-value="*" aria-label="Multiply">×</button>
+      <button class="btn" data-value="(" aria-label="Left parenthesis">(</button>
+      <button class="btn" data-value=")" aria-label="Right parenthesis">)</button>
+      <button class="btn operator" data-value="-" aria-label="Subtract">−</button>
+
+      <!-- Row 4: Numbers 1-3, Add, Dot, Zero, Equals -->
+      <button class="btn" data-value="1" aria-label="1">1</button>
+      <button class="btn" data-value="2" aria-label="2">2</button>
+      <button class="btn" data-value="3" aria-label="3">3</button>
+      <button class="btn operator" data-value="+" aria-label="Add">+</button>
+      <button class="btn" data-value="." aria-label="Decimal point">.</button>
+      <button class="btn" data-value="0" aria-label="0">0</button>
+      <button class="btn equal" data-value="=" aria-label="Equals">=</button>
+    </div>
+
+    <section class="history" aria-label="Calculation history" role="region">
+      <h2>History</h2>
+      <ul id="history-list" class="history-list" aria-live="polite"></ul>
+      <button id="clear-history" class="clear-history-btn" aria-label="Clear calculation history">Clear History</button>
+    </section>
+  </div>
+
+  <div class="corner-name" aria-label="Author name">Pratham Bhagat</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const display = document.getElementById('display');
+    const buttons = document.querySelectorAll('.btn');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history');
+
+    let currentInput = '';
+    let resultDisplayed = false;
+
+    // Load history from localStorage or empty array
+    let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+
+    function updateDisplay() {
+      display.textContent = currentInput || '0';
+    }
+
+    function addToHistory(entry) {
+      history.push(entry);
+      if (history.length > 50) {
+        history.shift();
+      }
+      localStorage.setItem('calcHistory', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = '';
+      if (history.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'No history yet!';
+        li.style.fontStyle = 'italic';
+        historyList.appendChild(li);
+        return;
+      }
+      history.slice().reverse().forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        historyList.appendChild(li);
+      });
+    }
+
+    function clearHistory() {
+      history = [];
+      localStorage.removeItem('calcHistory');
+      renderHistory();
+    }
+
+    function evaluateExpression(expression) {
+      try {
+        let expr = expression
+          .replace(/÷/g, '/')
+          .replace(/×/g, '*')
+          .replace(/−/g, '-')
+          .replace(/\^/g, '**')
+          .replace(/pi/g, 'Math.PI')
+          .replace(/\be\b/g, 'Math.E');
+
+        const functions = ['sin', 'cos', 'tan', 'sqrt', 'log', 'exp'];
+        functions.forEach(fn => {
+          const re = new RegExp(`\\b${fn}\\s*\\(`, 'g');
+          expr = expr.replace(re, `Math.${fn}(`);
+        });
+
+        // Use Math.log10 for log base 10
+        expr = expr.replace(/Math\.log\(/g, 'Math.log10(');
+
+        // Check only valid characters
+        if (!/^[0-9+\-*/().,MathPIElog10sincoatrexp]*$/.test(expr)) {
+          return 'Error';
+        }
+
+        let res = Function('"use strict";return (' + expr + ')')();
+
+        if (typeof res === 'number' && !isNaN(res) && isFinite(res)) {
+          res = Math.round((res + Number.EPSILON) * 1e10) / 1e10;
+          return res;
+        } else {
+          return 'Error';
+        }
+      } catch {
+        return 'Error';
+      }
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        const val = button.getAttribute('data-value');
+
+        // Animate button press
+        button.style.transform = 'scale(0.9)';
+        setTimeout(() => (button.style.transform = 'scale(1)'), 150);
+
+        if (val === 'C') {
+          currentInput = '';
+          resultDisplayed = false;
+          updateDisplay();
+          return;
+        }
+
+        if (val === '=') {
+          if (currentInput.trim() === '') return;
+          const result = evaluateExpression(currentInput);
+          if (result !== 'Error') {
+            addToHistory(`${currentInput} = ${result}`);
+            currentInput = String(result);
+            resultDisplayed = true;
+          } else {
+            currentInput = 'Error';
+            resultDisplayed = true;
+          }
+          updateDisplay();
+          return;
+        }
+
+        if (resultDisplayed) {
+          if ("0123456789.".includes(val) || val === '(') {
+            currentInput = val;
+          } else if ("+-*/^".includes(val) || val === ')') {
+            currentInput += val;
+          } else if (['sin(', 'cos(', 'tan(', 'sqrt(', 'log(', 'exp(', 'pi', 'e'].includes(val)) {
+            currentInput = val;
+          } else {
+            currentInput = '';
+          }
+          resultDisplayed = false;
+          updateDisplay();
+          return;
+        }
+
+        const lastChar = currentInput.slice(-1);
+        if ("+-*/^".includes(val)) {
+          if (currentInput === '') {
+            if (val !== '-') return;
+          }
+          if ("+-*/^".includes(lastChar)) {
+            currentInput = currentInput.slice(0, -1) + val;
+            updateDisplay();
+            return;
+          }
+        }
+
+        if (val === '.') {
+          // prevent multiple decimals in number
+          const lastNumber = currentInput.split(/[\+\-\*\/\^\(\)]/).pop();
+          if (lastNumber.includes('.')) return;
+          if (lastNumber === '') currentInput += '0';
+        }
+
+        currentInput += val;
+        updateDisplay();
+      });
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+      if (confirm('Clear all calculation history?')) {
+        clearHistory();
+      }
+    });
+
+    // Initialize display and history
+    updateDisplay();
+    renderHistory();
+  });
+</script>
+</body>
+</html>
